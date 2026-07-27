@@ -46,6 +46,7 @@
         .controls { display: flex; gap: 10px; margin-bottom: 15px; }
         .controls button { padding: 10px 20px; font-size: 16px; border: none; background-color: #6c757d; color: white; border-radius: 5px; cursor: pointer; }
         .controls button.submit { background-color: #28a745; }
+        .controls button:disabled { opacity: 0.6; cursor: default; }
         .sudoku-board { display: grid; grid-template-columns: repeat(9, 42px); grid-template-rows: repeat(9, 42px); border: 4px solid #000; margin-bottom: 20px; background-color: #ccc; gap: 1px; }
         .cell { width: 42px; height: 42px; background-color: white; display: flex; justify-content: center; align-items: center; font-size: 22px; font-weight: bold; cursor: pointer; user-select: none; box-sizing: border-box; }
         .cell:nth-child(3n) { border-right: 3px solid #000; }
@@ -71,7 +72,7 @@
         <ol>
             <li>학번과 이름을 정확히 입력해야 기록이 남습니다.</li>
             <li>빈칸을 클릭한 뒤 아래 숫자판이나 키보드 숫자키로 입력합니다.</li>
-            <li>지울 때는 '지우기' 버튼 또는 Backspace 키를 누릅니다.</li>
+            <li>지울 때는 '지우기' 버튼 또는 Backspace 키, Del 키를 누릅니다.</li>
             <li>모든 칸을 채워야 다음 단계로 넘어갈 수 있습니다.</li>
             <li>일반 스도쿠를 마치면 킬러 스도쿠가 이어서 나옵니다.</li>
             <li>모든 스도쿠를 완료하고 [제출]하면 최종 기록이 완료됩니다.</li>
@@ -108,31 +109,31 @@
 
     <div class="controls">
         <button onclick="clearCell()">지우기</button>
-        <button class="submit" onclick="submitSudoku()">제출하기</button>
+        <button class="submit" id="submit-btn" onclick="submitSudoku()">제출하기</button>
     </div>
 </div>
 
 <script>
     /* ===== 설정 ===== */
 
-    // 💡 1. 현재 파일의 난이도를 설정하세요.
-    const CURRENT_DIFFICULTY = 'normal'; 
+    // 현재 파일의 난이도
+    const CURRENT_DIFFICULTY = 'normal';
 
-    // 💡 2. 구글 폼 URL과 모든 정답 entry 번호를 여기에 넣으세요!
-    const GOOGLE_FORM_URL = "https://forms.gle/rFFypReaouUGyFeu6"; 
+    // ⚠️ 반드시 /formResponse 로 끝나는 주소여야 합니다. forms.gle 단축 링크로는 전송되지 않습니다.
+    const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdsib-_fNn4k7EUoZa9Q-aSjyCXOok8drNctMvnESmPtg9mVw/formResponse";
     const ENTRY_STUDENT_ID = "entry.739411276";   // 학번
     const ENTRY_STUDENT_NAME = "entry.2089700400"; // 이름
-    
+
     const ENTRY_EASY_ANSWER = "entry.1354150465";   // 쉬움 정답 문항
     const ENTRY_NORMAL_ANSWER = "entry.1040167626"; // 보통 정답 문항
     const ENTRY_HARD_ANSWER = "entry.987739919";    // 어려움 정답 문항
 
     const STORAGE_KEY = "sudokuTotalProgress"; // 모든 데이터를 모아둘 공통 바구니 이름
-    
-    // 사진에서 추출한 normal 난이도 배열
+
+    // Normal 난이도 문제판 (2행의 6은 6번째 열입니다)
     const initialBoard = [
         0, 2, 4, 3, 8, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 6, 0, 7,
+        0, 0, 0, 0, 0, 6, 0, 0, 7,
         0, 5, 8, 0, 0, 0, 4, 0, 0,
         4, 0, 0, 0, 1, 0, 0, 0, 0,
         0, 0, 0, 7, 0, 5, 0, 0, 0,
@@ -165,6 +166,7 @@
     /* ===== 스도쿠 판 ===== */
     function initBoard() {
         const boardEl = document.getElementById('board');
+        boardEl.innerHTML = "";
         for (let i = 0; i < 81; i++) {
             const cell = document.createElement('div');
             cell.classList.add('cell');
@@ -180,7 +182,7 @@
         restoreProgress();
     }
 
-    // 뒤로 가기로 온 경우 입력했던 내용을 되살립니다
+    // 앞 단계에서 입력한 학번과 이름을 이어받습니다
     function restoreProgress() {
         const saved = sessionStorage.getItem(STORAGE_KEY);
         if (!saved) return;
@@ -188,43 +190,49 @@
             const data = JSON.parse(saved);
             document.getElementById('student-id').value = data.studentId || "";
             document.getElementById('student-name').value = data.studentName || "";
-            
-            // 이전 진행 상태가 배열로 저장되어 있다면 복구 로직 수정 필요 (현재는 일반 문자열로 저장됨)
-            // 여기서는 단순히 학번/이름 유지용으로 사용
         } catch (e) {
             sessionStorage.removeItem(STORAGE_KEY);
         }
     }
 
     function selectCell(index, cellEl) {
-        if (selectedCellIndex !== null) document.getElementById('cell-' + selectedCellIndex).classList.remove('selected');
+        if (selectedCellIndex !== null) {
+            document.getElementById('cell-' + selectedCellIndex).classList.remove('selected');
+        }
         selectedCellIndex = index;
         cellEl.classList.add('selected');
     }
 
     function inputNumber(num) {
-        if (selectedCellIndex !== null) document.getElementById('cell-' + selectedCellIndex).innerText = num;
-        else alert("먼저 숫자를 입력할 빈칸을 선택해 줘!");
+        if (selectedCellIndex !== null) {
+            document.getElementById('cell-' + selectedCellIndex).innerText = num;
+        } else {
+            alert("먼저 숫자를 입력할 빈칸을 선택해 주세요.");
+        }
     }
 
     function clearCell() {
-        if (selectedCellIndex !== null) document.getElementById('cell-' + selectedCellIndex).innerText = "";
+        if (selectedCellIndex !== null) {
+            document.getElementById('cell-' + selectedCellIndex).innerText = "";
+        }
     }
 
     // PC 키보드 입력
     window.addEventListener('keydown', function(event) {
         if (document.activeElement.tagName === 'INPUT') return;
         if (document.getElementById('game-screen').style.display === 'none') return;
-        if (selectedCellIndex !== null) {
-            if (event.key >= '1' && event.key <= '9') {
-                inputNumber(event.key);
-            } else if (event.key === 'Backspace' || event.key === 'Delete') {
-                clearCell();
-            }
+        if (selectedCellIndex === null) return;
+
+        if (event.key >= '1' && event.key <= '9') {
+            inputNumber(event.key);
+        } else if (event.key === 'Backspace' || event.key === 'Delete') {
+            event.preventDefault();   // Backspace 뒤로 가기 방지
+            clearCell();
         }
     });
 
     function submitSudoku() {
+        const btn = document.getElementById('submit-btn');
         const studentId = document.getElementById('student-id').value.trim();
         const studentName = document.getElementById('student-name').value.trim();
 
@@ -243,57 +251,58 @@
             studentAnswer += cellText;
         }
 
-        // 1️⃣ 기존에 임시 저장된 데이터가 있는지 불러오기
-        let savedData = JSON.parse(sessionStorage.getItem(STORAGE_KEY)) || {
-            studentId: studentId,
-            studentName: studentName,
-            easy: "",
-            normal: "",
-            hard: ""
-        };
+        // 1️⃣ 기존에 임시 저장된 데이터 불러오기
+        let savedData;
+        try {
+            savedData = JSON.parse(sessionStorage.getItem(STORAGE_KEY));
+        } catch (e) {
+            savedData = null;
+        }
+        if (!savedData) {
+            savedData = { studentId: "", studentName: "", easy: "", normal: "", hard: "" };
+        }
 
-        // 2️⃣ 학번, 이름 갱신 및 이번에 푼 '현재 난이도'의 정답만 추가로 저장
+        // 2️⃣ 학번, 이름 갱신 및 현재 난이도 정답 저장
         savedData.studentId = studentId;
         savedData.studentName = studentName;
-        savedData[CURRENT_DIFFICULTY] = studentAnswer; 
+        savedData[CURRENT_DIFFICULTY] = studentAnswer;
 
-        // 브라우저에 통합 데이터 임시 저장
         sessionStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
 
-        // 3️⃣ 사용자에게 물어보기 (확인=true, 취소=false 반환)
+        // 3️⃣ 다음 단계로 갈지 묻기
         const wantMore = confirm("✅ 현재 난이도(Normal) 임시 저장 완료!\n\n가장 어려운 Hard(킬러 스도쿠) 난이도에도 도전하시겠습니까?\n\n[확인] 눌러서 킬러 스도쿠 도전하기\n[취소] 눌러서 지금까지의 기록만 최종 제출하기");
 
         if (wantMore) {
-            // [확인]을 누른 경우: 폼에 전송하지 않고 다음 난이도 파일(hard.html)로 이동
-            window.location.href = "hard.html"; 
-        } else {
-            // [취소]를 누른 경우: 임시 저장된 모든 데이터를 긁어모아서 구글 폼으로 진짜 전송!
-            const formData = new FormData();
-            formData.append(ENTRY_STUDENT_ID, savedData.studentId);
-            formData.append(ENTRY_STUDENT_NAME, savedData.studentName);
-            
-            if (savedData.easy !== "") formData.append(ENTRY_EASY_ANSWER, savedData.easy);
-            if (savedData.normal !== "") formData.append(ENTRY_NORMAL_ANSWER, savedData.normal);
-            if (savedData.hard !== "") formData.append(ENTRY_HARD_ANSWER, savedData.hard);
-
-            fetch(GOOGLE_FORM_URL, {
-                method: "POST",
-                mode: "no-cors",
-                body: formData
-            }).then(() => {
-                alert(`🎉 ${savedData.studentId} ${savedData.studentName} 학생, 모든 스도쿠 정답이 완벽하게 제출되었습니다!`);
-                sessionStorage.removeItem(STORAGE_KEY);
-                window.location.href = "easy.html"; // 끝난 뒤 처음 화면으로
-            }).catch(() => {
-                alert("❌ 전송 중 오류가 발생했습니다. 다시 시도해 주세요.");
-                btn.disabled = false;
-                btn.innerText = "최종 제출하기";
-            });
+            window.location.href = "hard.html";
+            return;
         }
-        
-        window.onload = function() {
-            if (loadSavedData()) initBoard();
-        };
-    </script>
+
+        // [취소]: 지금까지 모인 데이터를 구글 폼으로 전송
+        btn.disabled = true;
+        btn.innerText = "전송 중...";
+
+        const formData = new FormData();
+        formData.append(ENTRY_STUDENT_ID, savedData.studentId);
+        formData.append(ENTRY_STUDENT_NAME, savedData.studentName);
+
+        if (savedData.easy) formData.append(ENTRY_EASY_ANSWER, savedData.easy);
+        if (savedData.normal) formData.append(ENTRY_NORMAL_ANSWER, savedData.normal);
+        if (savedData.hard) formData.append(ENTRY_HARD_ANSWER, savedData.hard);
+
+        fetch(GOOGLE_FORM_URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: formData
+        }).then(function() {
+            alert("🎉 " + savedData.studentId + " " + savedData.studentName + " 학생, 스도쿠 정답이 제출되었습니다!");
+            sessionStorage.removeItem(STORAGE_KEY);
+            window.location.href = "easy.html";
+        }).catch(function() {
+            alert("❌ 전송 중 오류가 발생했습니다. 다시 시도해 주세요.");
+            btn.disabled = false;
+            btn.innerText = "제출하기";
+        });
+    }
+</script>
 </body>
 </html>
