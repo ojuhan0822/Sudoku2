@@ -277,22 +277,23 @@
             if (savedData.hard !== "") formData.append(ENTRY_HARD_ANSWER, savedData.hard);
 
             fetch(GOOGLE_FORM_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    body: formData
-}).then(() => {
-    sessionStorage.removeItem(STORAGE_KEY); // 저장된 임시 데이터 삭제
-    window.location.href = "thankyou.html"; // 💡 제출 완료 페이지로 이동!
-}).catch((error) => {
-    alert("❌ 제출 중 오류가 발생했습니다. 다시 시도해 주세요.");
-});
+                method: "POST",
+                mode: "no-cors",
+                body: formData
+            }).then(() => {
+                alert(`🎉 ${savedData.studentId} ${savedData.studentName} 학생, 모든 스도쿠 정답이 완벽하게 제출되었습니다!`);
+                sessionStorage.removeItem(STORAGE_KEY);
+                window.location.href = "easy.html"; // 끝난 뒤 처음 화면으로
+            }).catch(() => {
+                alert("❌ 전송 중 오류가 발생했습니다. 다시 시도해 주세요.");
+                btn.disabled = false;
+                btn.innerText = "최종 제출하기";
+            });
         }
-    }
-    window.onload = function() {
-        if (sessionStorage.getItem(STORAGE_KEY)) {
-            startGame();
-        }
-    };
-</script>
+        
+        window.onload = function() {
+            if (loadSavedData()) initBoard();
+        };
+    </script>
 </body>
 </html>
