@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일반 스도쿠 챌린지 (Normal)</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #f4f4f9; margin: 0; padding: 20px; }
+        h1 { color: #333; margin-bottom: 5px; text-align: center; }
+        .step { color: #6c757d; font-size: 15px; margin-bottom: 20px; text-align: center; }
+
+        /* ===== 주의사항 화면 ===== */
+        .notice-card {
+            background-color: #fff;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            padding: 25px 30px;
+            max-width: 520px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        .notice-card h2 { margin: 0 0 15px 0; font-size: 20px; color: #007bff; }
+        .notice-card ol { margin: 0; padding-left: 22px; line-height: 1.9; font-size: 16px; color: #333; }
+        .notice-card li { margin-bottom: 6px; }
+        .notice-card .warn { margin-top: 18px; padding: 12px 15px; background-color: #fff3cd; border-radius: 6px; font-size: 15px; color: #856404; line-height: 1.7; }
+        .start-btn {
+            display: block;
+            margin: 0 auto;
+            padding: 16px 60px;
+            font-size: 19px;
+            font-weight: bold;
+            font-family: inherit;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .start-btn:hover { background-color: #0069d9; }
+
+        /* ===== 게임 화면 ===== */
+        #game-screen { display: none; flex-direction: column; align-items: center; }
+        .user-info { display: flex; gap: 10px; margin-bottom: 15px; }
+        .user-info input { padding: 10px; font-size: 16px; border: 2px solid #ccc; border-radius: 5px; width: 140px; text-align: center; }
+        .user-info input:focus { outline: none; border-color: #007bff; }
+        .controls { display: flex; gap: 10px; margin-bottom: 15px; }
+        .controls button { padding: 10px 20px; font-size: 16px; border: none; background-color: #6c757d; color: white; border-radius: 5px; cursor: pointer; }
+        .controls button.submit { background-color: #28a745; }
+        .sudoku-board { display: grid; grid-template-columns: repeat(9, 42px); grid-template-rows: repeat(9, 42px); border: 4px solid #000; margin-bottom: 20px; background-color: #ccc; gap: 1px; }
+        .cell { width: 42px; height: 42px; background-color: white; display: flex; justify-content: center; align-items: center; font-size: 22px; font-weight: bold; cursor: pointer; user-select: none; box-sizing: border-box; }
+        .cell:nth-child(3n) { border-right: 3px solid #000; }
+        .cell:nth-child(9n) { border-right: none; }
+        .sudoku-board > .cell:nth-child(n+19):nth-child(-n+27), .sudoku-board > .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 3px solid #000; }
+        .cell.given { color: #222; background-color: #e9ecef; cursor: default; }
+        .cell.selected { background-color: #b3d4ff; border: 2px solid #007bff; z-index: 10; }
+        .numpad { display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; margin-bottom: 20px; }
+        .numpad button { width: 70px; height: 50px; font-size: 20px; border: none; background-color: #007bff; color: white; border-radius: 8px; cursor: pointer; }
+
+        /* 주의사항 다시 보기 링크 */
+        .notice-again { background: none; border: none; color: #007bff; font-size: 14px; font-family: inherit; cursor: pointer; text-decoration: underline; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<h1>🧩 일반 스도쿠 챌린지</h1>
+<div class="step">난이도: Normal (보통)</div>
+
+<div id="notice-screen">
+    <div class="notice-card">
+        <h2>📋 참여 전 확인해 주세요</h2>
+        <ol>
+            <li>학번과 이름을 정확히 입력해야 기록이 남습니다.</li>
+            <li>빈칸을 클릭한 뒤 아래 숫자판이나 키보드 숫자키로 입력합니다.</li>
+            <li>지울 때는 '지우기' 버튼 또는 Backspace 키를 누릅니다.</li>
+            <li>모든 칸을 채워야 다음 단계로 넘어갈 수 있습니다.</li>
+            <li>일반 스도쿠를 마치면 킬러 스도쿠가 이어서 나옵니다.</li>
+            <li>모든 스도쿠를 완료하고 [제출]하면 최종 기록이 완료됩니다.</li>
+        </ol>
+        <div class="warn">
+            ⚠️ 진행 중에 브라우저 탭을 닫거나 새로 고침하면 입력한 내용이 사라집니다.
+            끝까지 한 번에 진행해 주세요.
+        </div>
+    </div>
+    <button class="start-btn" onclick="startGame()">시작하기</button>
+</div>
+
+<div id="game-screen">
+    <button class="notice-again" onclick="showNotice()">주의사항 다시 보기</button>
+
+    <div class="user-info">
+        <input type="text" id="student-id" placeholder="학번 (예: 10101)">
+        <input type="text" id="student-name" placeholder="이름 (예: 홍길동)">
+    </div>
+
+    <div class="sudoku-board" id="board"></div>
+
+    <div class="numpad">
+        <button onclick="inputNumber(1)">1</button>
+        <button onclick="inputNumber(2)">2</button>
+        <button onclick="inputNumber(3)">3</button>
+        <button onclick="inputNumber(4)">4</button>
+        <button onclick="inputNumber(5)">5</button>
+        <button onclick="inputNumber(6)">6</button>
+        <button onclick="inputNumber(7)">7</button>
+        <button onclick="inputNumber(8)">8</button>
+        <button onclick="inputNumber(9)">9</button>
+    </div>
+
+    <div class="controls">
+        <button onclick="clearCell()">지우기</button>
+        <button class="submit" onclick="submitSudoku()">제출하기</button>
+    </div>
+</div>
+
+<script>
+    /* ===== 설정 ===== */
+
+    // 💡 1. 현재 파일의 난이도를 설정하세요.
+    const CURRENT_DIFFICULTY = 'normal'; 
+
+    // 💡 2. 구글 폼 URL과 모든 정답 entry 번호를 여기에 넣으세요!
+    const GOOGLE_FORM_URL = "https://forms.gle/rFFypReaouUGyFeu6"; 
+    const ENTRY_STUDENT_ID = "entry.739411276";   // 학번
+    const ENTRY_STUDENT_NAME = "entry.2089700400"; // 이름
+    
+    const ENTRY_EASY_ANSWER = "entry.1354150465";   // 쉬움 정답 문항
+    const ENTRY_NORMAL_ANSWER = "entry.1040167626"; // 보통 정답 문항
+    const ENTRY_HARD_ANSWER = "entry.987739919";    // 어려움 정답 문항
+
+    const STORAGE_KEY = "sudokuTotalProgress"; // 모든 데이터를 모아둘 공통 바구니 이름
+    
+    // 사진에서 추출한 normal 난이도 배열
+    const initialBoard = [
+        0, 2, 4, 3, 8, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 6, 0, 7,
+        0, 5, 8, 0, 0, 0, 4, 0, 0,
+        4, 0, 0, 0, 1, 0, 0, 0, 0,
+        0, 0, 0, 7, 0, 5, 0, 0, 0,
+        0, 0, 0, 0, 2, 0, 0, 0, 8,
+        0, 0, 1, 0, 0, 0, 6, 7, 0,
+        3, 0, 0, 5, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 4, 9, 2, 1, 0
+    ];
+
+    let selectedCellIndex = null;
+    let boardReady = false;
+
+    /* ===== 화면 전환 ===== */
+    function startGame() {
+        document.getElementById('notice-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'flex';
+        if (!boardReady) {
+            initBoard();
+            boardReady = true;
+        }
+        document.getElementById('student-id').focus();
+    }
+
+    function showNotice() {
+        document.getElementById('game-screen').style.display = 'none';
+        document.getElementById('notice-screen').style.display = 'block';
+        window.scrollTo(0, 0);
+    }
+
+    /* ===== 스도쿠 판 ===== */
+    function initBoard() {
+        const boardEl = document.getElementById('board');
+        for (let i = 0; i < 81; i++) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            if (initialBoard[i] !== 0) {
+                cell.innerText = initialBoard[i];
+                cell.classList.add('given');
+            } else {
+                cell.addEventListener('click', () => selectCell(i, cell));
+            }
+            cell.id = 'cell-' + i;
+            boardEl.appendChild(cell);
+        }
+        restoreProgress();
+    }
+
+    // 뒤로 가기로 온 경우 입력했던 내용을 되살립니다
+    function restoreProgress() {
+        const saved = sessionStorage.getItem(STORAGE_KEY);
+        if (!saved) return;
+        try {
+            const data = JSON.parse(saved);
+            document.getElementById('student-id').value = data.studentId || "";
+            document.getElementById('student-name').value = data.studentName || "";
+            
+            // 이전 진행 상태가 배열로 저장되어 있다면 복구 로직 수정 필요 (현재는 일반 문자열로 저장됨)
+            // 여기서는 단순히 학번/이름 유지용으로 사용
+        } catch (e) {
+            sessionStorage.removeItem(STORAGE_KEY);
+        }
+    }
+
+    function selectCell(index, cellEl) {
+        if (selectedCellIndex !== null) document.getElementById('cell-' + selectedCellIndex).classList.remove('selected');
+        selectedCellIndex = index;
+        cellEl.classList.add('selected');
+    }
+
+    function inputNumber(num) {
+        if (selectedCellIndex !== null) document.getElementById('cell-' + selectedCellIndex).innerText = num;
+        else alert("먼저 숫자를 입력할 빈칸을 선택해 줘!");
+    }
+
+    function clearCell() {
+        if (selectedCellIndex !== null) document.getElementById('cell-' + selectedCellIndex).innerText = "";
+    }
+
+    // PC 키보드 입력
+    window.addEventListener('keydown', function(event) {
+        if (document.activeElement.tagName === 'INPUT') return;
+        if (document.getElementById('game-screen').style.display === 'none') return;
+        if (selectedCellIndex !== null) {
+            if (event.key >= '1' && event.key <= '9') {
+                inputNumber(event.key);
+            } else if (event.key === 'Backspace' || event.key === 'Delete') {
+                clearCell();
+            }
+        }
+    });
+
+    function submitSudoku() {
+        const studentId = document.getElementById('student-id').value.trim();
+        const studentName = document.getElementById('student-name').value.trim();
+
+        if (studentId === "" || studentName === "") {
+            alert("❌ 학번과 이름을 입력하셔야 제출이 가능합니다.");
+            return;
+        }
+
+        let studentAnswer = "";
+        for (let i = 0; i < 81; i++) {
+            const cellText = document.getElementById('cell-' + i).innerText.trim();
+            if (cellText === "") {
+                alert("⚠️ 스도쿠의 모든 빈칸을 채워야 다음으로 넘어갈 수 있습니다!");
+                return;
+            }
+            studentAnswer += cellText;
+        }
+
+        // 1️⃣ 기존에 임시 저장된 데이터가 있는지 불러오기
+        let savedData = JSON.parse(sessionStorage.getItem(STORAGE_KEY)) || {
+            studentId: studentId,
+            studentName: studentName,
+            easy: "",
+            normal: "",
+            hard: ""
+        };
+
+        // 2️⃣ 학번, 이름 갱신 및 이번에 푼 '현재 난이도'의 정답만 추가로 저장
+        savedData.studentId = studentId;
+        savedData.studentName = studentName;
+        savedData[CURRENT_DIFFICULTY] = studentAnswer; 
+
+        // 브라우저에 통합 데이터 임시 저장
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
+
+        // 3️⃣ 사용자에게 물어보기 (확인=true, 취소=false 반환)
+        const wantMore = confirm("✅ 현재 난이도(Normal) 임시 저장 완료!\n\n가장 어려운 Hard(킬러 스도쿠) 난이도에도 도전하시겠습니까?\n\n[확인] 눌러서 킬러 스도쿠 도전하기\n[취소] 눌러서 지금까지의 기록만 최종 제출하기");
+
+        if (wantMore) {
+            // [확인]을 누른 경우: 폼에 전송하지 않고 다음 난이도 파일(hard.html)로 이동
+            window.location.href = "hard.html"; 
+        } else {
+            // [취소]를 누른 경우: 임시 저장된 모든 데이터를 긁어모아서 구글 폼으로 진짜 전송!
+            const formData = new FormData();
+            formData.append(ENTRY_STUDENT_ID, savedData.studentId);
+            formData.append(ENTRY_STUDENT_NAME, savedData.studentName);
+            
+            if (savedData.easy !== "") formData.append(ENTRY_EASY_ANSWER, savedData.easy);
+            if (savedData.normal !== "") formData.append(ENTRY_NORMAL_ANSWER, savedData.normal);
+            if (savedData.hard !== "") formData.append(ENTRY_HARD_ANSWER, savedData.hard);
+
+            fetch(GOOGLE_FORM_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: formData
+            }).then(() => {
+                alert("🎉 모든 데이터가 성공적으로 최종 제출되었습니다!\n행사에 참여해 주셔서 감사합니다.");
+                sessionStorage.removeItem(STORAGE_KEY); 
+                window.location.href = "easy.html"; // 제출 완료 후 처음으로 이동
+            }).catch((error) => {
+                alert("❌ 제출 중 오류가 발생했습니다. 다시 시도해 주세요.");
+                console.error(error);
+            });
+        }
+    }
+    window.onload = function() {
+        if (sessionStorage.getItem(STORAGE_KEY)) {
+            startGame();
+        }
+    };
+</script>
+</body>
+</html>
