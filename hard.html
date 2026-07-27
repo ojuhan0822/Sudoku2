@@ -9,6 +9,7 @@
         h1 { color: #333; margin-bottom: 5px; }
         .step { color: #6c757d; font-size: 15px; margin-bottom: 10px; }
         .who { font-size: 16px; font-weight: bold; color: #e83e8c; margin-bottom: 15px; }
+        .tip { font-size: 14px; color: #856404; background-color: #fff3cd; padding: 10px 15px; border-radius: 6px; margin-bottom: 15px; max-width: 420px; text-align: center; line-height: 1.6; }
 
         .controls { display: flex; gap: 10px; margin-bottom: 15px; }
         .controls button { padding: 10px 20px; font-size: 16px; border: none; background-color: #6c757d; color: white; border-radius: 5px; cursor: pointer; }
@@ -33,9 +34,13 @@
     <h1>🔥 킬러 스도쿠</h1>
     <div class="step">난이도: Hard (마지막 단계)</div>
     <div class="who" id="who"></div>
-    
+    <div class="tip">
+        ⚠️ 이 화면에는 지금까지 푼 모든 기록이 담겨 있습니다.<br>
+        제출을 마치기 전에 탭을 닫거나 새로 고침하지 마세요.
+    </div>
+
     <div class="sudoku-board" id="board"></div>
-    
+
     <div class="numpad">
         <button onclick="inputNumber(1)">1</button>
         <button onclick="inputNumber(2)">2</button>
@@ -47,12 +52,12 @@
         <button onclick="inputNumber(8)">8</button>
         <button onclick="inputNumber(9)">9</button>
     </div>
-    
+
     <div class="controls">
         <button onclick="clearCell()">지우기</button>
         <button class="submit" id="submit-btn" onclick="submitSudoku()">최종 제출하기</button>
     </div>
-    
+
     <script>
         const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdsib-_fNn4k7EUoZa9Q-aSjyCXOok8drNctMvnESmPtg9mVw/formResponse";
         const ENTRY_STUDENT_ID = "entry.739411276";
@@ -64,6 +69,7 @@
         const STORAGE_KEY = "sudokuTotalProgress";
         let savedData = null;
         let selectedCellIndex = null;
+        let submitted = false;   // 제출 완료 여부 (이탈 경고 해제용)
 
         const cageColors = [
             1, 2, 2, 1, 2, 2, 1, 1, 1,
@@ -97,18 +103,23 @@
             }
             try {
                 savedData = JSON.parse(saved);
-                document.getElementById('who').innerText = `${savedData.studentId} ${savedData.studentName} 님, 마지막 도전입니다!`;
-                return true;
             } catch (e) {
+                savedData = null;
+            }
+            if (!savedData || !savedData.studentId) {
                 alert("⚠️ 기록을 읽을 수 없습니다. 처음 화면으로 이동합니다.");
                 sessionStorage.removeItem(STORAGE_KEY);
                 window.location.href = "easy.html";
                 return false;
             }
+            document.getElementById('who').innerText =
+                savedData.studentId + " " + savedData.studentName + " 님, 마지막 도전입니다!";
+            return true;
         }
 
         function initBoard() {
             const boardEl = document.getElementById('board');
+            boardEl.innerHTML = "";
             for (let i = 0; i < 81; i++) {
                 const cell = document.createElement('div');
                 cell.classList.add('cell');
@@ -127,7 +138,7 @@
                 boardEl.appendChild(cell);
             }
         }
-        
+
         function selectCell(index, cellEl) {
             if (selectedCellIndex !== null) {
                 const prev = document.getElementById('cell-' + selectedCellIndex);
@@ -136,25 +147,45 @@
             selectedCellIndex = index;
             cellEl.classList.add('selected');
         }
-        
+
         function inputNumber(num) {
-            if (selectedCellIndex !== null) document.getElementById('val-' + selectedCellIndex).innerText = num;
-            else alert("먼저 숫자를 입력할 빈칸을 선택해 줘!");
+            if (selectedCellIndex !== null) {
+                document.getElementById('val-' + selectedCellIndex).innerText = num;
+            } else {
+                alert("먼저 숫자를 입력할 빈칸을 선택해 주세요.");
+            }
         }
-        
+
         function clearCell() {
-            if (selectedCellIndex !== null) document.getElementById('val-' + selectedCellIndex).innerText = "";
+            if (selectedCellIndex !== null) {
+                document.getElementById('val-' + selectedCellIndex).innerText = "";
+            }
         }
 
         window.addEventListener('keydown', function(event) {
             if (document.activeElement.tagName === 'INPUT') return;
-            if (selectedCellIndex !== null) {
-                if (event.key >= '1' && event.key <= '9') inputNumber(event.key);
-                else if (event.key === 'Backspace' || event.key === 'Delete') clearCell();
+
+            // 이 페이지에는 입력창이 없어 Backspace가 곧바로 뒤로 가기가 됩니다. 반드시 막습니다.
+            if (event.key === 'Backspace') event.preventDefault();
+
+            if (selectedCellIndex === null) return;
+
+            if (event.key >= '1' && event.key <= '9') {
+                inputNumber(event.key);
+            } else if (event.key === 'Backspace' || event.key === 'Delete') {
+                event.preventDefault();
+                clearCell();
             }
         });
-        
-        function submitSudoku() { 
+
+        // 제출 전에 실수로 창을 닫거나 새로 고치는 것을 막습니다
+        window.addEventListener('beforeunload', function(event) {
+            if (submitted) return;
+            event.preventDefault();
+            event.returnValue = "";
+        });
+
+        function submitSudoku() {
             let killerAnswer = "";
             for (let i = 0; i < 81; i++) {
                 const cellText = document.getElementById('val-' + i).innerText.trim();
@@ -172,27 +203,28 @@
             const formData = new FormData();
             formData.append(ENTRY_STUDENT_ID, savedData.studentId);
             formData.append(ENTRY_STUDENT_NAME, savedData.studentName);
-            
+
             // 이전 파일에서 넘어온 데이터들 검사 후 첨부
-            if (savedData.easy && savedData.easy !== "") formData.append(ENTRY_EASY_ANSWER, savedData.easy);
-            if (savedData.normal && savedData.normal !== "") formData.append(ENTRY_NORMAL_ANSWER, savedData.normal);
-            formData.append(ENTRY_HARD_ANSWER, killerAnswer); // 지금 푼 하드 정답 첨부
+            if (savedData.easy) formData.append(ENTRY_EASY_ANSWER, savedData.easy);
+            if (savedData.normal) formData.append(ENTRY_NORMAL_ANSWER, savedData.normal);
+            formData.append(ENTRY_HARD_ANSWER, killerAnswer);
 
             fetch(FORM_URL, {
                 method: "POST",
                 mode: "no-cors",
                 body: formData
-            }).then(() => {
-                alert(`🎉 ${savedData.studentId} ${savedData.studentName} 학생, 모든 스도쿠 정답이 완벽하게 제출되었습니다!`);
+            }).then(function() {
+                submitted = true;   // 이탈 경고 해제
+                alert("🎉 " + savedData.studentId + " " + savedData.studentName + " 학생, 모든 스도쿠 정답이 제출되었습니다!");
                 sessionStorage.removeItem(STORAGE_KEY);
-                window.location.href = "easy.html"; // 끝난 뒤 처음 화면으로
-            }).catch(() => {
+                window.location.href = "easy.html";
+            }).catch(function() {
                 alert("❌ 전송 중 오류가 발생했습니다. 다시 시도해 주세요.");
                 btn.disabled = false;
                 btn.innerText = "최종 제출하기";
             });
         }
-        
+
         window.onload = function() {
             if (loadSavedData()) initBoard();
         };
