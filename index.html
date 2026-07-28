@@ -196,64 +196,66 @@
         }
     });
 
-    function submitSudoku() {
-        const btn = document.getElementById('submit-btn');
-        const studentId = document.getElementById('student-id').value.trim();
-        const studentName = document.getElementById('student-name').value.trim();
+ function submitSudoku() {
+    const studentId = document.getElementById('student-id').value.trim();
+    const studentName = document.getElementById('student-name').value.trim();
 
-        if (studentId === "" || studentName === "") {
-            alert("❌ 학번과 이름을 입력하셔야 제출이 가능합니다.");
+    if (studentId === "" || studentName === "") {
+        alert("❌ 학번과 이름을 입력하셔야 제출이 가능합니다.");
+        return;
+    }
+
+    let studentAnswer = "";
+    for (let i = 0; i < 81; i++) {
+        const cellText = document.getElementById('cell-' + i).innerText.trim();
+        if (cellText === "") {
+            alert("⚠️ 스도쿠의 모든 빈칸을 채워야 다음으로 넘어갈 수 있습니다!");
             return;
         }
+        studentAnswer += cellText;
+    }
 
-        let studentAnswer = "";
-        for (let i = 0; i < 81; i++) {
-            const cellText = document.getElementById('cell-' + i).innerText.trim();
-            if (cellText === "") {
-                alert("⚠️ 스도쿠의 모든 빈칸을 채워야 다음으로 넘어갈 수 있습니다!");
-                return;
-            }
-            studentAnswer += cellText;
-        }
+    // 1. 데이터 임시 저장
+    let savedData = {
+        studentId: studentId,
+        studentName: studentName,
+        easy: studentAnswer,
+        normal: "",
+        hard: ""
+    };
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
 
-        const savedData = {
-            studentId: studentId,
-            studentName: studentName,
-            easy: studentAnswer,
-            normal: "",
-            hard: ""
-        };
-        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
+    // 2. 진행 여부 확인
+    const wantMore = confirm("✅ 현재 난이도(Easy) 임시 저장 완료!\n\n더 어려운 Normal 난이도도 이어서 도전하시겠습니까?\n\n[확인] 눌러서 Normal 난이도 도전하기\n[취소] 눌러서 지금까지의 기록만 최종 제출하기");
 
-        const wantMore = confirm("✅ 현재 난이도(Easy) 임시 저장 완료!\n\n더 어려운 Normal 난이도도 이어서 도전하시겠습니까?\n\n[확인] 눌러서 Normal 난이도 도전하기\n[취소] 눌러서 지금까지의 기록만 최종 제출하기");
-
-        if (wantMore) {
-            window.location.href = "normal.html";
-            return;
-        }
-
-        btn.disabled = true;
-        btn.innerText = "전송 중...";
-
-        const formData = new FormData();
+    if (wantMore) {
+        // [확인] 클릭 ➡️ 다음 난이도로 이동
+        window.location.href = "normal.html";
+    } else {
+        // [취소] 클릭 ➡️ 구글 폼으로 데이터 진짜 전송!
+        const formData = new URLSearchParams(); // FormData 대신 더 안정적인 URLSearchParams 사용
         formData.append(ENTRY_STUDENT_ID, savedData.studentId);
         formData.append(ENTRY_STUDENT_NAME, savedData.studentName);
         formData.append(ENTRY_EASY_ANSWER, savedData.easy);
 
         fetch(FORM_URL, {
-            method: "POST",
-            mode: "no-cors",
-            body: formData
-        }).then(function() {
-            alert("🎉 " + savedData.studentId + " " + savedData.studentName + " 학생, 정답이 제출되었습니다!");
+            method: 'POST',
+            mode: 'no-cors', // 구글 폼 차단 회피 옵션
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: formData.toString()
+        }).then(() => {
+            alert("🎉 제출이 완료되었습니다!");
             sessionStorage.removeItem(STORAGE_KEY);
-            window.location.reload();
-        }).catch(function() {
-            alert("❌ 전송 중 오류가 발생했습니다. 다시 시도해 주세요.");
-            btn.disabled = false;
-            btn.innerText = "제출하기";
+            window.location.href = "thankyou.html"; // 완료 페이지로 이동
+        }).catch((error) => {
+            alert("❌ 제출 중 오류가 발생했습니다. 구글 폼 설정이나 인터넷 연결을 확인해 주세요.");
+            console.error(error);
         });
     }
+}
+
 </script>
 </body>
 </html>
