@@ -55,6 +55,7 @@
 
     <div class="controls">
         <button onclick="clearCell()">지우기</button>
+         <button onclick="clearAllCells()" style="background-color: #ff3b30; color: white;">전체 지우기</button>
         <button class="submit" id="submit-btn" onclick="submitSudoku()">최종 제출하기</button>
     </div>
 
@@ -161,6 +162,20 @@
                 document.getElementById('val-' + selectedCellIndex).innerText = "";
             }
         }
+        function clearAllCells() {
+    const check = confirm("작성하신 모든 숫자를 지우고 처음부터 다시 시작하시겠습니까?");
+    if (check) {
+        for (let i = 0; i < 81; i++) {
+            const valSpan = document.getElementById('val-' + i);
+            if (valSpan) valSpan.innerText = "";
+        }
+        if (selectedCellIndex !== null) {
+            const prev = document.getElementById('cell-' + selectedCellIndex);
+            if (prev) prev.classList.remove('selected');
+            selectedCellIndex = null;
+        }
+    }
+}
 
         window.addEventListener('keydown', function(event) {
             if (document.activeElement.tagName === 'INPUT') return;
