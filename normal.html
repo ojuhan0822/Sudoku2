@@ -107,10 +107,12 @@
         <button onclick="inputNumber(9)">9</button>
     </div>
 
-    <div class="controls">
-        <button onclick="clearCell()">지우기</button>
-        <button class="submit" id="submit-btn" onclick="submitSudoku()">제출하기</button>
-    </div>
+  <div class="controls">
+    <button onclick="clearCell()">지우기</button>
+    <button onclick="clearAllCells()" style="background-color: #ff3b30; color: white;">전체 지우기</button>
+    <button class="submit" onclick="submitSudoku()">제출하기</button>
+  </div>
+
 </div>
 
 <script>
@@ -216,6 +218,25 @@
             document.getElementById('cell-' + selectedCellIndex).innerText = "";
         }
     }
+    function clearAllCells() {
+    const check = confirm("작성하신 모든 숫자를 지우고 처음부터 다시 시작하시겠습니까?");
+    if (check) {
+        for (let i = 0; i < 81; i++) {
+            // 처음부터 숫자가 채워져 있던 칸(given)이 아닌 경우만 지움
+            if (initialBoard[i] === 0) {
+                const cell = document.getElementById('cell-' + i);
+                if (cell) cell.innerText = "";
+         }
+    }
+        
+        // 선택되었던 칸 강조 해제
+        if (selectedCellIndex !== null) {
+            const prev = document.getElementById('cell-' + selectedCellIndex);
+            if (prev) prev.classList.remove('selected');
+            selectedCellIndex = null;
+        }
+    }
+}
 
     // PC 키보드 입력
     window.addEventListener('keydown', function(event) {
