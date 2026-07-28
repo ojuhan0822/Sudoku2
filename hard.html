@@ -217,7 +217,7 @@
                 submitted = true;   // 이탈 경고 해제
                 alert("🎉 " + savedData.studentId + " " + savedData.studentName + " 학생, 모든 스도쿠 정답이 제출되었습니다!");
                 sessionStorage.removeItem(STORAGE_KEY);
-                window.location.href = "easy.html";
+                window.location.href = "thankyou.html";
             }).catch(function() {
                 alert("❌ 전송 중 오류가 발생했습니다. 다시 시도해 주세요.");
                 btn.disabled = false;
