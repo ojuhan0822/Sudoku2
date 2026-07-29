@@ -171,10 +171,11 @@
                 alert("먼저 숫자를 입력할 빈칸을 선택해 주세요.");
             }
         }
+        
 let timerInterval = null;
 let secondsPassed = 0;
 
-function startTimer() {
+        function startTimer() {
     if (timerInterval) clearInterval(timerInterval);
     secondsPassed = 0;
     updateTimerDisplay();
@@ -185,7 +186,7 @@ function startTimer() {
     }, 1000);
 }
 
-function updateTimerDisplay() {
+    function updateTimerDisplay() {
     const minutes = Math.floor(secondsPassed / 60);
     const seconds = secondsPassed % 60;
     const formattedMinutes = String(minutes).padStart(2, '0');
@@ -194,14 +195,6 @@ function updateTimerDisplay() {
     const display = document.getElementById('timer-display');
     if (display) display.innerText = `${formattedMinutes}:${formattedSeconds}`;
 }
-
-// ⏱️ 페이지 가동 시 이전 기록 확인 후 타이머 시작
-window.onload = function() {
-    if (loadSavedData()) {
-        initBoard();
-        startTimer(); // 스톱워치 작동
-    }
-};
 
         function clearCell() {
             if (selectedCellIndex !== null) {
@@ -299,9 +292,10 @@ window.onload = function() {
 }
 
         window.onload = function() {
-            if (loadSavedData()) initBoard();
-        };
-        startTimer(); //
+    if (sessionStorage.getItem(STORAGE_KEY)) {
+        startGame();
+        startTimer(); // 👈 이 줄을 추가해서 들어오자마자 스톱워치 시작!
+
     </script>
 </body>
 </html>
