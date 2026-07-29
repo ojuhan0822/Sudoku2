@@ -56,7 +56,18 @@
         .cell.selected { background-color: #b3d4ff; border: 2px solid #007bff; z-index: 10; }
         .numpad { display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; margin-bottom: 20px; }
         .numpad button { width: 70px; height: 50px; font-size: 20px; border: none; background-color: #007bff; color: white; border-radius: 8px; cursor: pointer; }
-        
+        .timer-box {
+    font-size: 20px;
+    font-weight: bold;
+    color: #dc3545;
+    background-color: #fff;
+    border: 2px solid #dc3545;
+    border-radius: 8px;
+    padding: 8px 16px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
 
         /* 주의사항 다시 보기 링크 */
         .notice-again { background: none; border: none; color: #007bff; font-size: 14px; font-family: inherit; cursor: pointer; text-decoration: underline; margin-bottom: 10px; }
@@ -309,58 +320,47 @@ window.onload = function() {
             studentAnswer += cellText;
         }
 
-        // 1️⃣ 기존에 임시 저장된 데이터 불러오기
-        let savedData;
-        try {
-            savedData = JSON.parse(sessionStorage.getItem(STORAGE_KEY));
-        } catch (e) {
-            savedData = null;
-        }
-        if (!savedData) {
-            savedData = { studentId: "", studentName: "", easy: "", normal: "", hard: "" };
-        }
+    // ⏱️ 타이머 중지 및 Normal 소요 시간 측정
+    if (timerInterval) clearInterval(timerInterval);
+    const normalTimeSpent = document.getElementById('timer-display').innerText;
 
-        // 2️⃣ 학번, 이름 갱신 및 현재 난이도 정답 저장
-        savedData.studentId = studentId;
-        savedData.studentName = studentName;
-        savedData[CURRENT_DIFFICULTY] = studentAnswer;
+    // 이전 저장 데이터 불러오기 및 Normal 데이터 누적
+    let savedData = JSON.parse(sessionStorage.getItem(STORAGE_KEY)) || {};
+    savedData.studentId = studentId;
+    savedData.studentName = studentName;
+    savedData.normal = studentAnswer;
+    savedData.normalTime = normalTimeSpent; // ⏱️ Normal 시간 기록
 
-        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
 
-        // 3️⃣ 다음 단계로 갈지 묻기
-        const wantMore = confirm("✅ 현재 난이도(Normal) 임시 저장 완료!\n\n가장 어려운 Hard(킬러 스도쿠) 난이도에도 도전하시겠습니까?\n\n[확인] 눌러서 킬러 스도쿠 도전하기\n[취소] 눌러서 지금까지의 기록만 최종 제출하기");
+    const wantMore = confirm("✅ Normal 난이도 임시 저장 완료!\n\n마지막 Hard(킬러 스도쿠) 난이도도 도전하시겠습니까?\n\n[확인] 눌러서 Hard 도전\n[취소] 눌러서 최종 제출하고 끝내기");
 
-        if (wantMore) {
-            window.location.href = "hard.html";
-            return;
-        }
-
-        // [취소]: 지금까지 모인 데이터를 구글 폼으로 전송
-        btn.disabled = true;
-        btn.innerText = "전송 중...";
-
-        const formData = new FormData();
+    if (wantMore) {
+        window.location.href = "hard.html";
+    } else {
+        // [취소] 클릭 ➡️ 누적된 데이터(Easy + Normal) 구글 폼으로 최종 전송
+        const formData = new URLSearchParams();
         formData.append(ENTRY_STUDENT_ID, savedData.studentId);
         formData.append(ENTRY_STUDENT_NAME, savedData.studentName);
-
+        
         if (savedData.easy) formData.append(ENTRY_EASY_ANSWER, savedData.easy);
-        if (savedData.normal) formData.append(ENTRY_NORMAL_ANSWER, savedData.normal);
-        if (savedData.hard) formData.append(ENTRY_HARD_ANSWER, savedData.hard);
+        if (savedData.easyTime) formData.append(ENTRY_EASY_TIME, savedData.easyTime);
+        
+        formData.append(ENTRY_NORMAL_ANSWER, savedData.normal);
+        formData.append(ENTRY_NORMAL_TIME, savedData.normalTime); // ⏱️ Normal 시간 전송
 
         fetch(GOOGLE_FORM_URL, {
-            method: "POST",
-            mode: "no-cors",
-            body: formData
-        }).then(function() {
-            alert("🎉 " + savedData.studentId + " " + savedData.studentName + " 학생, 스도쿠 정답이 제출되었습니다!");
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
+        }).then(() => {
             sessionStorage.removeItem(STORAGE_KEY);
-            window.location.href = "easy.html";
-        }).catch(function() {
-            alert("❌ 전송 중 오류가 발생했습니다. 다시 시도해 주세요.");
-            btn.disabled = false;
-            btn.innerText = "제출하기";
+            window.location.href = "thankyou.html";
         });
     }
+}
+
 </script>
 </body>
 </html>
