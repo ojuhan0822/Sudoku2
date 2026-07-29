@@ -109,8 +109,11 @@
     const ENTRY_STUDENT_ID = "entry.739411276";
     const ENTRY_STUDENT_NAME = "entry.2089700400";
     const ENTRY_EASY_ANSWER = "entry.1354150465";
+    const ENTRY_EASY_TIME = "entry.264315519";
     const ENTRY_NORMAL_ANSWER = "entry.1040167626";
+    const ENTRY_NORMAL_TIME = "entry.1999114906";
     const ENTRY_HARD_ANSWER = "entry.987739919";
+    const ENTRY_HARD_TIME = "entry.1607811555";
 
     const STORAGE_KEY = "sudokuTotalProgress";
 
@@ -237,7 +240,7 @@ function updateTimerDisplay() {
         }
     });
 
- function submitSudoku() {
+function submitSudoku() {
     const studentId = document.getElementById('student-id').value.trim();
     const studentName = document.getElementById('student-name').value.trim();
 
@@ -256,46 +259,50 @@ function updateTimerDisplay() {
         studentAnswer += cellText;
     }
 
-    // 1. 데이터 임시 저장
+    // ⏱️ 현재 소요 시간 가져오기 및 타이머 멈춤
+    if (timerInterval) clearInterval(timerInterval);
+    const easyTimeSpent = document.getElementById('timer-display').innerText;
+
+    // 1. 임시 저장 데이터 바구니 생성 (시간 포함)
     let savedData = {
         studentId: studentId,
         studentName: studentName,
         easy: studentAnswer,
+        easyTime: easyTimeSpent,
         normal: "",
-        hard: ""
+        normalTime: "",
+        hard: "",
+        hardTime: ""
     };
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
 
-    // 2. 진행 여부 확인
-    const wantMore = confirm("✅ 현재 난이도(Easy) 임시 저장 완료!\n\n더 어려운 Normal 난이도도 이어서 도전하시겠습니까?\n\n[확인] 눌러서 Normal 난이도 도전하기\n[취소] 눌러서 지금까지의 기록만 최종 제출하기");
+    // 2. 진행/취소 확인
+    const wantMore = confirm("✅ Easy 난이도 임시 저장 완료!\n\n더 어려운 Normal 난이도도 이어서 도전하시겠습니까?\n\n[확인] 눌러서 Normal 도전\n[취소] 눌러서 최종 제출하고 끝내기");
 
     if (wantMore) {
-        // [확인] 클릭 ➡️ 다음 난이도로 이동
         window.location.href = "normal.html";
     } else {
-        // [취소] 클릭 ➡️ 구글 폼으로 데이터 진짜 전송!
-        const formData = new URLSearchParams(); // FormData 대신 더 안정적인 URLSearchParams 사용
+        // [취소] 클릭 ➡️ Easy 정답과 Easy 시간 전송
+        const formData = new URLSearchParams();
         formData.append(ENTRY_STUDENT_ID, savedData.studentId);
         formData.append(ENTRY_STUDENT_NAME, savedData.studentName);
         formData.append(ENTRY_EASY_ANSWER, savedData.easy);
+        formData.append(ENTRY_EASY_TIME, savedData.easyTime); // ⏱️ Easy 시간 전송
 
         fetch(FORM_URL, {
             method: 'POST',
-            mode: 'no-cors', // 구글 폼 차단 회피 옵션
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: formData.toString()
         }).then(() => {
-            alert("🎉 제출이 완료되었습니다!");
             sessionStorage.removeItem(STORAGE_KEY);
-            window.location.href = "thankyou.html"; // 완료 페이지로 이동
+            window.location.href = "thankyou.html";
         }).catch((error) => {
-            alert("❌ 제출 중 오류가 발생했습니다. 구글 폼 설정이나 인터넷 연결을 확인해 주세요.");
-            console.error(error);
+            alert("❌ 제출 중 오류가 발생했습니다.");
         });
     }
 }
+
 
 </script>
 </body>
