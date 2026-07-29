@@ -28,26 +28,28 @@
         .cell.selected { border: 3px solid #ff0000 !important; z-index: 10; }
         .numpad { display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; margin-bottom: 20px; }
         .numpad button { width: 70px; height: 50px; font-size: 20px; border: none; background-color: #e83e8c; color: white; border-radius: 8px; cursor: pointer; }
+        
         .timer-box {
-    font-size: 20px;
-    font-weight: bold;
-    color: #dc3545;
-    background-color: #fff;
-    border: 2px solid #dc3545;
-    border-radius: 8px;
-    padding: 8px 16px;
-    margin-bottom: 15px;
-    text-align: center;
-}
-
+            font-size: 20px;
+            font-weight: bold;
+            color: #dc3545;
+            background-color: #fff;
+            border: 2px solid #dc3545;
+            border-radius: 8px;
+            padding: 8px 16px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <h1>🔥 쌰갈 스도쿠</h1>
     <div class="step">난이도: Hard (마지막 단계)</div>
+    
     <div class="timer-box">
-    ⏱️ 경과 시간: <span id="timer-display">00:00</span>
-</div>
+        ⏱️ 경과 시간: <span id="timer-display">00:00</span>
+    </div>
+
     <div class="who" id="who"></div>
     <div class="tip">
         ⚠️ 이 화면에는 지금까지 푼 모든 기록이 담겨 있습니다.<br>
@@ -70,26 +72,25 @@
 
     <div class="controls">
         <button onclick="clearCell()">지우기</button>
-         <button onclick="clearAllCells()" style="background-color: #ff3b30; color: white;">전체 지우기</button>
+        <button onclick="clearAllCells()" style="background-color: #ff3b30; color: white;">전체 지우기</button>
         <button class="submit" id="submit-btn" onclick="submitSudoku()">최종 제출하기</button>
     </div>
 
     <script>
-const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdsib-_fNn4k7EUoZa9Q-aSjyCXOok8drNctMvnESmPtg9mVw/formResponse";
-const ENTRY_STUDENT_ID = "entry.739411276";
-const ENTRY_STUDENT_NAME = "entry.2089700400";
-const ENTRY_EASY_ANSWER = "entry.1354150465";
-const ENTRY_EASY_TIME = "entry.264315519";
-const ENTRY_NORMAL_ANSWER = "entry.1040167626";
-const ENTRY_NORMAL_TIME = "entry.1999114906";
-const ENTRY_HARD_ANSWER = "entry.987739919";
-const ENTRY_HARD_TIME = "entry.1607811555";
-
+        const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdsib-_fNn4k7EUoZa9Q-aSjyCXOok8drNctMvnESmPtg9mVw/formResponse";
+        const ENTRY_STUDENT_ID = "entry.739411276";
+        const ENTRY_STUDENT_NAME = "entry.2089700400";
+        const ENTRY_EASY_ANSWER = "entry.1354150465";
+        const ENTRY_EASY_TIME = "entry.264315519";
+        const ENTRY_NORMAL_ANSWER = "entry.1040167626";
+        const ENTRY_NORMAL_TIME = "entry.1999114906";
+        const ENTRY_HARD_ANSWER = "entry.987739919";
+        const ENTRY_HARD_TIME = "entry.1607811555";
 
         const STORAGE_KEY = "sudokuTotalProgress";
         let savedData = null;
         let selectedCellIndex = null;
-        let submitted = false;   // 제출 완료 여부 (이탈 경고 해제용)
+        let submitted = false;   // 제출 완료 여부
 
         const cageColors = [
             1, 2, 2, 1, 2, 2, 1, 1, 1,
@@ -176,56 +177,54 @@ const ENTRY_HARD_TIME = "entry.1607811555";
             }
         }
         
-let timerInterval = null;
-let secondsPassed = 0;
+        let timerInterval = null;
+        let secondsPassed = 0;
 
         function startTimer() {
-    if (timerInterval) clearInterval(timerInterval);
-    secondsPassed = 0;
-    updateTimerDisplay();
+            if (timerInterval) clearInterval(timerInterval);
+            secondsPassed = 0;
+            updateTimerDisplay();
 
-    timerInterval = setInterval(() => {
-        secondsPassed++;
-        updateTimerDisplay();
-    }, 1000);
-}
+            timerInterval = setInterval(() => {
+                secondsPassed++;
+                updateTimerDisplay();
+            }, 1000);
+        }
 
-    function updateTimerDisplay() {
-    const minutes = Math.floor(secondsPassed / 60);
-    const seconds = secondsPassed % 60;
-    const formattedMinutes = String(minutes).padStart(2, '0');
-    const formattedSeconds = String(seconds).padStart(2, '0');
-    
-    const display = document.getElementById('timer-display');
-    if (display) display.innerText = `${formattedMinutes}:${formattedSeconds}`;
-}
+        function updateTimerDisplay() {
+            const minutes = Math.floor(secondsPassed / 60);
+            const seconds = secondsPassed % 60;
+            const formattedMinutes = String(minutes).padStart(2, '0');
+            const formattedSeconds = String(seconds).padStart(2, '0');
+            
+            const display = document.getElementById('timer-display');
+            if (display) display.innerText = `${formattedMinutes}:${formattedSeconds}`;
+        }
 
         function clearCell() {
             if (selectedCellIndex !== null) {
                 document.getElementById('val-' + selectedCellIndex).innerText = "";
             }
         }
+
         function clearAllCells() {
-    const check = confirm("작성하신 모든 숫자를 지우고 처음부터 다시 시작하시겠습니까?");
-    if (check) {
-        for (let i = 0; i < 81; i++) {
-            const valSpan = document.getElementById('val-' + i);
-            if (valSpan) valSpan.innerText = "";
+            const check = confirm("작성하신 모든 숫자를 지우고 처음부터 다시 시작하시겠습니까?");
+            if (check) {
+                for (let i = 0; i < 81; i++) {
+                    const valSpan = document.getElementById('val-' + i);
+                    if (valSpan) valSpan.innerText = "";
+                }
+                if (selectedCellIndex !== null) {
+                    const prev = document.getElementById('cell-' + selectedCellIndex);
+                    if (prev) prev.classList.remove('selected');
+                    selectedCellIndex = null;
+                }
+            }
         }
-        if (selectedCellIndex !== null) {
-            const prev = document.getElementById('cell-' + selectedCellIndex);
-            if (prev) prev.classList.remove('selected');
-            selectedCellIndex = null;
-        }
-    }
-}
 
         window.addEventListener('keydown', function(event) {
             if (document.activeElement.tagName === 'INPUT') return;
-
-            // 이 페이지에는 입력창이 없어 Backspace가 곧바로 뒤로 가기가 됩니다. 반드시 막습니다.
             if (event.key === 'Backspace') event.preventDefault();
-
             if (selectedCellIndex === null) return;
 
             if (event.key >= '1' && event.key <= '9') {
@@ -236,7 +235,6 @@ let secondsPassed = 0;
             }
         });
 
-        // 제출 전에 실수로 창을 닫거나 새로 고치는 것을 막습니다
         window.addEventListener('beforeunload', function(event) {
             if (submitted) return;
             event.preventDefault();
@@ -244,63 +242,61 @@ let secondsPassed = 0;
         });
 
         function submitSudoku() {
-    let killerAnswer = "";
-    for (let i = 0; i < 81; i++) {
-        const cellText = document.getElementById('val-' + i).innerText.trim();
-        if (cellText === "") {
-            alert("⚠️ 쌰갈 스도쿠의 모든 칸을 채워야 제출할 수 있습니다!");
-            return;
+            let killerAnswer = "";
+            for (let i = 0; i < 81; i++) {
+                const cellText = document.getElementById('val-' + i).innerText.trim();
+                if (cellText === "") {
+                    alert("⚠️ 쌰갈 스도쿠의 모든 칸을 채워야 제출할 수 있습니다!");
+                    return;
+                }
+                killerAnswer += cellText;
+            }
+
+            if (timerInterval) clearInterval(timerInterval);
+            const hardTimeSpent = document.getElementById('timer-display').innerText;
+
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.innerText = "전송 중...";
+
+            const formData = new URLSearchParams();
+            formData.append(ENTRY_STUDENT_ID, savedData.studentId);
+            formData.append(ENTRY_STUDENT_NAME, savedData.studentName);
+            
+            if (savedData.easy) formData.append(ENTRY_EASY_ANSWER, savedData.easy);
+            if (savedData.easyTime) formData.append(ENTRY_EASY_TIME, savedData.easyTime);
+
+            if (savedData.normal) formData.append(ENTRY_NORMAL_ANSWER, savedData.normal);
+            if (savedData.normalTime) formData.append(ENTRY_NORMAL_TIME, savedData.normalTime);
+
+            formData.append(ENTRY_HARD_ANSWER, killerAnswer);
+            formData.append(ENTRY_HARD_TIME, hardTimeSpent);
+
+            submitted = true;
+
+            fetch(FORM_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData.toString()
+            }).then(() => {
+                alert("🎉 모든 난이도의 제출이 완벽하게 완료되었습니다!");
+                sessionStorage.removeItem(STORAGE_KEY);
+                window.location.href = "thankyou.html";
+            }).catch(() => {
+                alert("❌ 전송 중 오류가 발생했습니다.");
+                btn.disabled = false;
+                btn.innerText = "최종 제출하기";
+                submitted = false;
+            });
         }
-        killerAnswer += cellText;
-    }
-
-    // ⏱️ 타이머 중지 및 Hard 소요 시간 측정
-    if (timerInterval) clearInterval(timerInterval);
-    const hardTimeSpent = document.getElementById('timer-display').innerText;
-
-    const btn = document.getElementById('submit-btn');
-    btn.disabled = true;
-    btn.innerText = "전송 중...";
-
-    // 🚀 모여있는 모든 데이터를 한꺼번에 전송
-    const formData = new URLSearchParams();
-    formData.append(ENTRY_STUDENT_ID, savedData.studentId);
-    formData.append(ENTRY_STUDENT_NAME, savedData.studentName);
-    
-    // Easy 기록 전송 (있을 경우)
-    if (savedData.easy) formData.append(ENTRY_EASY_ANSWER, savedData.easy);
-    if (savedData.easyTime) formData.append(ENTRY_EASY_TIME, savedData.easyTime);
-
-    // Normal 기록 전송 (있을 경우)
-    if (savedData.normal) formData.append(ENTRY_NORMAL_ANSWER, savedData.normal);
-    if (savedData.normalTime) formData.append(ENTRY_NORMAL_TIME, savedData.normalTime);
-
-    // Hard 기록 전송
-    formData.append(ENTRY_HARD_ANSWER, killerAnswer);
-    formData.append(ENTRY_HARD_TIME, hardTimeSpent); // ⏱️ Hard 시간 전송
-
-    fetch(FORM_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formData.toString()
-    }).then(() => {
-        alert("🎉 모든 난이도의 제출이 완벽하게 완료되었습니다!");
-        sessionStorage.removeItem(STORAGE_KEY);
-        window.location.href = "thankyou.html";
-    }).catch(() => {
-        alert("❌ 전송 중 오류가 발생했습니다.");
-        btn.disabled = false;
-        btn.innerText = "최종 제출하기";
-    });
-}
 
         window.onload = function() {
-    if (sessionStorage.getItem(STORAGE_KEY)) {
-        startGame();
-        startTimer(); // 👈 이 줄을 추가해서 들어오자마자 스톱워치 시작!
-		}
-    };
+            if (loadSavedData()) {
+                initBoard();
+                startTimer();
+            }
+        };
     </script>
 </body>
 </html>
