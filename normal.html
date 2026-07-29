@@ -56,6 +56,7 @@
         .cell.selected { background-color: #b3d4ff; border: 2px solid #007bff; z-index: 10; }
         .numpad { display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; margin-bottom: 20px; }
         .numpad button { width: 70px; height: 50px; font-size: 20px; border: none; background-color: #007bff; color: white; border-radius: 8px; cursor: pointer; }
+        
 
         /* 주의사항 다시 보기 링크 */
         .notice-again { background: none; border: none; color: #007bff; font-size: 14px; font-family: inherit; cursor: pointer; text-decoration: underline; margin-bottom: 10px; }
@@ -87,6 +88,10 @@
 
 <div id="game-screen">
     <button class="notice-again" onclick="showNotice()">주의사항 다시 보기</button>
+
+    <div class="timer-box">
+        ⏱️ 경과 시간: <span id="timer-display">00:00</span>
+    </div>
 
     <div class="user-info">
         <input type="text" id="student-id" placeholder="학번 (예: 10101)">
@@ -212,6 +217,38 @@
             alert("먼저 숫자를 입력할 빈칸을 선택해 주세요.");
         }
     }
+    
+let timerInterval = null;
+let secondsPassed = 0;
+
+function startTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    secondsPassed = 0;
+    updateTimerDisplay();
+
+    timerInterval = setInterval(() => {
+        secondsPassed++;
+        updateTimerDisplay();
+    }, 1000);
+}
+
+function updateTimerDisplay() {
+    const minutes = Math.floor(secondsPassed / 60);
+    const seconds = secondsPassed % 60;
+    const formattedMinutes = String(minutes).padStart(2, '0');
+    const formattedSeconds = String(seconds).padStart(2, '0');
+    
+    const display = document.getElementById('timer-display');
+    if (display) display.innerText = `${formattedMinutes}:${formattedSeconds}`;
+}
+
+// ⏱️ 페이지 입장 시 타이머 자동 시작
+window.onload = function() {
+    if (sessionStorage.getItem(STORAGE_KEY)) {
+        startGame();
+        startTimer(); // 스톱워치 자동 작동
+    }
+};
 
     function clearCell() {
         if (selectedCellIndex !== null) {
