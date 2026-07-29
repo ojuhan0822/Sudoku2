@@ -114,7 +114,7 @@
             const saved = sessionStorage.getItem(STORAGE_KEY);
             if (!saved) {
                 alert("⚠️ 이전 난이도 진행 기록이 없습니다. 처음부터 다시 진행해 주세요.");
-                window.location.href = "easy.html";
+                window.location.href = "index.html";
                 return false;
             }
             try {
@@ -125,7 +125,7 @@
             if (!savedData || !savedData.studentId) {
                 alert("⚠️ 기록을 읽을 수 없습니다. 처음 화면으로 이동합니다.");
                 sessionStorage.removeItem(STORAGE_KEY);
-                window.location.href = "easy.html";
+                window.location.href = "index.html";
                 return false;
             }
             document.getElementById('who').innerText =
