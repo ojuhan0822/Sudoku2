@@ -75,12 +75,16 @@
     </div>
 
     <script>
-        const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdsib-_fNn4k7EUoZa9Q-aSjyCXOok8drNctMvnESmPtg9mVw/formResponse";
-        const ENTRY_STUDENT_ID = "entry.739411276";
-        const ENTRY_STUDENT_NAME = "entry.2089700400";
-        const ENTRY_EASY_ANSWER = "entry.1354150465";
-        const ENTRY_NORMAL_ANSWER = "entry.1040167626";
-        const ENTRY_HARD_ANSWER = "entry.987739919";
+const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdsib-_fNn4k7EUoZa9Q-aSjyCXOok8drNctMvnESmPtg9mVw/formResponse";
+const ENTRY_STUDENT_ID = "entry.739411276";
+const ENTRY_STUDENT_NAME = "entry.2089700400";
+const ENTRY_EASY_ANSWER = "entry.1354150465";
+const ENTRY_EASY_TIME = "entry.264315519";
+const ENTRY_NORMAL_ANSWER = "entry.1040167626";
+const ENTRY_NORMAL_TIME = "entry.1999114906";
+const ENTRY_HARD_ANSWER = "entry.987739919";
+const ENTRY_HARD_TIME = "entry.1607811555";
+
 
         const STORAGE_KEY = "sudokuTotalProgress";
         let savedData = null;
@@ -295,7 +299,8 @@ let secondsPassed = 0;
     if (sessionStorage.getItem(STORAGE_KEY)) {
         startGame();
         startTimer(); // 👈 이 줄을 추가해서 들어오자마자 스톱워치 시작!
-
+		}
+    };
     </script>
 </body>
 </html>
