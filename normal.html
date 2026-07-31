@@ -57,19 +57,17 @@
         .numpad { display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; margin-bottom: 20px; }
         .numpad button { width: 70px; height: 50px; font-size: 20px; border: none; background-color: #007bff; color: white; border-radius: 8px; cursor: pointer; }
         .timer-box {
-    font-size: 20px;
-    font-weight: bold;
-    color: #dc3545;
-    background-color: #fff;
-    border: 2px solid #a6cfe8;
-    border-radius: 8px;
-    padding: 8px 16px;
-    margin-bottom: 15px;
-    text-align: center;
-}
+            font-size: 20px;
+            font-weight: bold;
+            color: #dc3545;
+            background-color: #fff;
+            border: 2px solid #a6cfe8;
+            border-radius: 8px;
+            padding: 8px 16px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
 
-
-        /* 주의사항 다시 보기 링크 */
         .notice-again { background: none; border: none; color: #007bff; font-size: 14px; font-family: inherit; cursor: pointer; text-decoration: underline; margin-bottom: 10px; }
     </style>
 </head>
@@ -119,34 +117,30 @@
         <button onclick="inputNumber(9)">9</button>
     </div>
 
-  <div class="controls">
-    <button onclick="clearCell()">지우기</button>
-    <button onclick="clearAllCells()" style="background-color: #ff3b30; color: white;">전체 지우기</button>
-    <button class="submit" onclick="submitSudoku()">제출하기</button>
-  </div>
+    <div class="controls">
+        <button onclick="clearCell()">지우기</button>
+        <button onclick="clearAllCells()" style="background-color: #ff3b30; color: white;">전체 지우기</button>
+        <button class="submit" id="submit-btn" onclick="submitSudoku()">제출하기</button>
+    </div>
 
 </div>
 
 <script>
     /* ===== 설정 ===== */
-
-    // 현재 파일의 난이도
     const CURRENT_DIFFICULTY = 'normal';
 
-    // ⚠️ 반드시 /formResponse 로 끝나는 주소여야 합니다. forms.gle 단축 링크로는 전송되지 않습니다.
-const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdsib-_fNn4k7EUoZa9Q-aSjyCXOok8drNctMvnESmPtg9mVw/formResponse";
-const ENTRY_STUDENT_ID = "entry.739411276";
-const ENTRY_STUDENT_NAME = "entry.2089700400";
-const ENTRY_EASY_ANSWER = "entry.1354150465";
-const ENTRY_EASY_TIME = "entry.264315519";
-const ENTRY_NORMAL_ANSWER = "entry.1040167626";
-const ENTRY_NORMAL_TIME = "entry.1999114906";
-const ENTRY_HARD_ANSWER = "entry.987739919";
-const ENTRY_HARD_TIME = "entry.1607811555";
+    const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdsib-_fNn4k7EUoZa9Q-aSjyCXOok8drNctMvnESmPtg9mVw/formResponse";
+    const ENTRY_STUDENT_ID = "entry.739411276";
+    const ENTRY_STUDENT_NAME = "entry.2089700400";
+    const ENTRY_EASY_ANSWER = "entry.1354150465";
+    const ENTRY_EASY_TIME = "entry.264315519";
+    const ENTRY_NORMAL_ANSWER = "entry.1040167626";
+    const ENTRY_NORMAL_TIME = "entry.1999114906";
+    const ENTRY_HARD_ANSWER = "entry.987739919";
+    const ENTRY_HARD_TIME = "entry.1607811555";
  
-    const STORAGE_KEY = "sudokuTotalProgress"; // 모든 데이터를 모아둘 공통 바구니 이름
+    const STORAGE_KEY = "sudokuTotalProgress";
 
-    // Normal 난이도 문제판 (2행의 6은 6번째 열입니다)
     const initialBoard = [
         0, 2, 4, 3, 8, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 6, 0, 0, 7,
@@ -170,6 +164,7 @@ const ENTRY_HARD_TIME = "entry.1607811555";
             initBoard();
             boardReady = true;
         }
+        startTimer();
         document.getElementById('student-id').focus();
     }
 
@@ -198,7 +193,6 @@ const ENTRY_HARD_TIME = "entry.1607811555";
         restoreProgress();
     }
 
-    // 앞 단계에서 입력한 학번과 이름을 이어받습니다
     function restoreProgress() {
         const saved = sessionStorage.getItem(STORAGE_KEY);
         if (!saved) return;
@@ -227,64 +221,59 @@ const ENTRY_HARD_TIME = "entry.1607811555";
         }
     }
     
-let timerInterval = null;
-let secondsPassed = 0;
+    let timerInterval = null;
+    let secondsPassed = 0;
 
-function startTimer() {
-    if (timerInterval) clearInterval(timerInterval);
-    secondsPassed = 0;
-    updateTimerDisplay();
-
-    timerInterval = setInterval(() => {
-        secondsPassed++;
+    function startTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        secondsPassed = 0;
         updateTimerDisplay();
-    }, 1000);
-}
 
-function updateTimerDisplay() {
-    const minutes = Math.floor(secondsPassed / 60);
-    const seconds = secondsPassed % 60;
-    const formattedMinutes = String(minutes).padStart(2, '0');
-    const formattedSeconds = String(seconds).padStart(2, '0');
-    
-    const display = document.getElementById('timer-display');
-    if (display) display.innerText = `${formattedMinutes}:${formattedSeconds}`;
-}
-
-// ⏱️ 페이지 입장 시 타이머 자동 시작
-window.onload = function() {
-    if (sessionStorage.getItem(STORAGE_KEY)) {
-        startGame();
-        startTimer(); // 스톱워치 자동 작동
+        timerInterval = setInterval(() => {
+            secondsPassed++;
+            updateTimerDisplay();
+        }, 1000);
     }
-};
+
+    function updateTimerDisplay() {
+        const minutes = Math.floor(secondsPassed / 60);
+        const seconds = secondsPassed % 60;
+        const formattedMinutes = String(minutes).padStart(2, '0');
+        const formattedSeconds = String(seconds).padStart(2, '0');
+        
+        const display = document.getElementById('timer-display');
+        if (display) display.innerText = `${formattedMinutes}:${formattedSeconds}`;
+    }
+
+    window.onload = function() {
+        if (sessionStorage.getItem(STORAGE_KEY)) {
+            startGame();
+        }
+    };
 
     function clearCell() {
         if (selectedCellIndex !== null) {
             document.getElementById('cell-' + selectedCellIndex).innerText = "";
         }
     }
+
     function clearAllCells() {
-    const check = confirm("작성하신 모든 숫자를 지우고 처음부터 다시 시작하시겠습니까?");
-    if (check) {
-        for (let i = 0; i < 81; i++) {
-            // 처음부터 숫자가 채워져 있던 칸(given)이 아닌 경우만 지움
-            if (initialBoard[i] === 0) {
-                const cell = document.getElementById('cell-' + i);
-                if (cell) cell.innerText = "";
-         }
-    }
-        
-        // 선택되었던 칸 강조 해제
-        if (selectedCellIndex !== null) {
-            const prev = document.getElementById('cell-' + selectedCellIndex);
-            if (prev) prev.classList.remove('selected');
-            selectedCellIndex = null;
+        const check = confirm("작성하신 모든 숫자를 지우고 처음부터 다시 시작하시겠습니까?");
+        if (check) {
+            for (let i = 0; i < 81; i++) {
+                if (initialBoard[i] === 0) {
+                    const cell = document.getElementById('cell-' + i);
+                    if (cell) cell.innerText = "";
+                }
+            }
+            if (selectedCellIndex !== null) {
+                const prev = document.getElementById('cell-' + selectedCellIndex);
+                if (prev) prev.classList.remove('selected');
+                selectedCellIndex = null;
+            }
         }
     }
-}
 
-    // PC 키보드 입력
     window.addEventListener('keydown', function(event) {
         if (document.activeElement.tagName === 'INPUT') return;
         if (document.getElementById('game-screen').style.display === 'none') return;
@@ -293,13 +282,12 @@ window.onload = function() {
         if (event.key >= '1' && event.key <= '9') {
             inputNumber(event.key);
         } else if (event.key === 'Backspace' || event.key === 'Delete') {
-            event.preventDefault();   // Backspace 뒤로 가기 방지
+            event.preventDefault();
             clearCell();
         }
     });
 
     function submitSudoku() {
-        const btn = document.getElementById('submit-btn');
         const studentId = document.getElementById('student-id').value.trim();
         const studentName = document.getElementById('student-name').value.trim();
 
@@ -318,47 +306,47 @@ window.onload = function() {
             studentAnswer += cellText;
         }
 
-    // ⏱️ 타이머 중지 및 Normal 소요 시간 측정
-    if (timerInterval) clearInterval(timerInterval);
-    const normalTimeSpent = document.getElementById('timer-display').innerText;
+        if (timerInterval) clearInterval(timerInterval);
+        const normalTimeSpent = document.getElementById('timer-display').innerText;
 
-    // 이전 저장 데이터 불러오기 및 Normal 데이터 누적
-    let savedData = JSON.parse(sessionStorage.getItem(STORAGE_KEY)) || {};
-    savedData.studentId = studentId;
-    savedData.studentName = studentName;
-    savedData.normal = studentAnswer;
-    savedData.normalTime = normalTimeSpent; // ⏱️ Normal 시간 기록
+        let savedData = JSON.parse(sessionStorage.getItem(STORAGE_KEY)) || {};
+        savedData.studentId = studentId;
+        savedData.studentName = studentName;
+        savedData.normal = studentAnswer;
+        savedData.normalTime = normalTimeSpent;
 
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
 
-    const wantMore = confirm("✅ Normal 난이도 임시 저장 완료!\n\n마지막 Hard(킬러 스도쿠) 난이도도 도전하시겠습니까?\n\n[확인] 눌러서 Hard 도전\n[취소] 눌러서 최종 제출하고 끝내기");
+        const wantMore = confirm("✅ Normal 난이도 임시 저장 완료!\n\n마지막 Hard(킬러 스도쿠) 난이도도 도전하시겠습니까?\n\n[확인] 눌러서 Hard 도전\n[취소] 눌러서 최종 제출하고 끝내기");
 
-    if (wantMore) {
-        window.location.href = "hard.html";
-    } else {
-        // [취소] 클릭 ➡️ 누적된 데이터(Easy + Normal) 구글 폼으로 최종 전송
-        const formData = new URLSearchParams();
-        formData.append(ENTRY_STUDENT_ID, savedData.studentId);
-        formData.append(ENTRY_STUDENT_NAME, savedData.studentName);
-        
-        if (savedData.easy) formData.append(ENTRY_EASY_ANSWER, savedData.easy);
-        if (savedData.easyTime) formData.append(ENTRY_EASY_TIME, savedData.easyTime);
-        
-        formData.append(ENTRY_NORMAL_ANSWER, savedData.normal);
-        formData.append(ENTRY_NORMAL_TIME, savedData.normalTime); // ⏱️ Normal 시간 전송
+        if (wantMore) {
+            window.location.href = "hard.html";
+        } else {
+            const formData = new URLSearchParams();
+            formData.append(ENTRY_STUDENT_ID, savedData.studentId);
+            formData.append(ENTRY_STUDENT_NAME, savedData.studentName);
+            
+            if (savedData.easy) formData.append(ENTRY_EASY_ANSWER, savedData.easy);
+            if (savedData.easyTime) formData.append(ENTRY_EASY_TIME, savedData.easyTime);
+            
+            formData.append(ENTRY_NORMAL_ANSWER, savedData.normal);
+            formData.append(ENTRY_NORMAL_TIME, savedData.normalTime);
 
-        fetch(GOOGLE_FORM_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: formData.toString()
-        }).then(() => {
-            sessionStorage.removeItem(STORAGE_KEY);
-            window.location.href = "thankyou.html";
-        });
+            // ⚠️ 오타 수정 완료: FORM_URL 변수로 정상 호출
+            fetch(FORM_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData.toString()
+            }).then(() => {
+                sessionStorage.removeItem(STORAGE_KEY);
+                window.location.href = "thankyou.html";
+            }).catch((err) => {
+                alert("❌ 전송 중 오류가 발생했습니다.");
+                console.error(err);
+            });
+        }
     }
-}
-
 </script>
 </body>
 </html>
