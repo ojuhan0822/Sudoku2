@@ -11,9 +11,10 @@
         .who { font-size: 16px; font-weight: bold; color: #e83e8c; margin-bottom: 15px; }
         .tip { font-size: 14px; color: #856404; background-color: #fff3cd; padding: 10px 15px; border-radius: 6px; margin-bottom: 15px; max-width: 420px; text-align: center; line-height: 1.6; }
 
-        .controls { display: flex; gap: 10px; margin-bottom: 15px; }
-        .controls button { padding: 10px 20px; font-size: 16px; border: none; background-color: #6c757d; color: white; border-radius: 5px; cursor: pointer; }
-        .controls button.submit { background-color: #28a745; }
+        .controls { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; justify-content: center; }
+        .controls button { padding: 10px 16px; font-size: 15px; border: none; background-color: #6c757d; color: white; border-radius: 5px; cursor: pointer; }
+        .controls button.submit { background-color: #28a745; font-weight: bold; }
+        .controls button.giveup { background-color: #ff9500; font-weight: bold; }
         .controls button:disabled { background-color: #adb5bd; cursor: not-allowed; }
 
         .sudoku-board { display: grid; grid-template-columns: repeat(9, 36px); grid-template-rows: repeat(9, 36px); border: 3px solid #000; margin-bottom: 20px; }
@@ -28,15 +29,15 @@
         .cell.selected { border: 3px solid #ff0000 !important; z-index: 10; }
         .numpad { display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; margin-bottom: 20px; }
         .numpad button { width: 70px; height: 50px; font-size: 20px; border: none; background-color: #e83e8c; color: white; border-radius: 8px; cursor: pointer; }
+        
         .timer-box {
             display: none;
-}
+        }
     </style>
 </head>
 <body>
     <h1>🔥 쌰갈 스도쿠</h1>
     <div class="step">난이도: Hard (마지막 단계)</div>
-</div>
 
     <div class="timer-box">
         ⏱️ 경과 시간: <span id="timer-display">00:00</span>
@@ -65,6 +66,7 @@
     <div class="controls">
         <button onclick="clearCell()">지우기</button>
         <button onclick="clearAllCells()" style="background-color: #ff3b30; color: white;">전체 지우기</button>
+        <button class="giveup" onclick="submitWithoutHard()">Hard 포기하고 지금까지 기록 제출</button>
         <button class="submit" id="submit-btn" onclick="submitSudoku()">최종 제출하기</button>
     </div>
 
@@ -233,6 +235,52 @@
             event.returnValue = "";
         });
 
+        // 🎯 Hard 포기하고 이전 단계(Easy, Normal) 기록만 제출하는 함수
+        function submitWithoutHard() {
+            const confirmSubmit = confirm("Hard 난이도를 도전하지 않고, 지금까지 작성하신 기록(Easy, Normal)만 제출하시겠습니까?");
+            if (!confirmSubmit) return;
+
+            if (timerInterval) clearInterval(timerInterval);
+
+            const btn = document.getElementById('submit-btn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = "전송 중...";
+            }
+
+            const formData = new URLSearchParams();
+            formData.append(ENTRY_STUDENT_ID, savedData.studentId);
+            formData.append(ENTRY_STUDENT_NAME, savedData.studentName);
+            
+            if (savedData.easy) formData.append(ENTRY_EASY_ANSWER, savedData.easy);
+            if (savedData.easyTime) formData.append(ENTRY_EASY_TIME, savedData.easyTime);
+
+            if (savedData.normal) formData.append(ENTRY_NORMAL_ANSWER, savedData.normal);
+            if (savedData.normalTime) formData.append(ENTRY_NORMAL_TIME, savedData.normalTime);
+
+            // Hard 항목은 미도전으로 처리
+            formData.append(ENTRY_HARD_ANSWER, "미도전(포기)");
+            formData.append(ENTRY_HARD_TIME, "-");
+
+            submitted = true;
+
+            fetch(FORM_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData.toString()
+            }).then(() => {
+                alert("🎉 이전 난이도까지의 제출이 완벽하게 완료되었습니다!");
+                sessionStorage.removeItem(STORAGE_KEY);
+                window.location.href = "thankyou.html";
+            }).catch(() => {
+                alert("❌ 전송 중 오류가 발생했습니다.");
+                if (btn) btn.disabled = false;
+                submitted = false;
+            });
+        }
+
+        // 🏆 Hard 포함 전체 최종 제출 함수
         function submitSudoku() {
             let killerAnswer = "";
             for (let i = 0; i < 81; i++) {
